@@ -10,6 +10,9 @@
 #elif defined(ARDUINO) && (ARDUINO==153)
 	#define MRUBY_ARDUINO_BOARD_GALILEO
 	/*#pragma message "Intel Galileo detected"*/
+#elif defined(GRSAKURA)
+	#define MRUBY_ARDUINO_BOARD_GR
+	#pragma message "Gadget Renesas Board detected"
 #else
 	/*Treat as chipKIT or ArduinoDue for unknown boards.*/
 	#define MRUBY_ARDUINO_BOARD_CHIPKIT_OR_DUE
