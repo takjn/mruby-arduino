@@ -82,10 +82,14 @@ mrb_value mrb_servo_initialize(mrb_state *mrb, mrb_value self){
 
 mrb_value mrb_servo_attach(mrb_state *mrb, mrb_value self){
   Servo *servo = (Servo *)mrb_get_datatype(mrb, self, &mrb_servo_type);
-
-  mrb_int pin = 0;
-  mrb_get_args(mrb, "i", &pin);
-  servo->attach(pin);
+  mrb_int pin, min, max;
+  int n = mrb_get_args(mrb, "i|ii", &pin, &min, &max);
+  if (n==3) {
+    servo->attach(pin, min, max);
+  }
+  else {
+    servo->attach(pin);
+  }
   return mrb_nil_value();
 }
 
@@ -95,6 +99,24 @@ mrb_value mrb_servo_write(mrb_state *mrb, mrb_value self){
   mrb_get_args(mrb, "i", &angle);
   servo->write(angle);
   return mrb_nil_value();
+}
+
+mrb_value mrb_servo_writeMicroseconds(mrb_state *mrb, mrb_value self){
+  Servo *servo = (Servo *)mrb_get_datatype(mrb, self, &mrb_servo_type);
+  mrb_int us = 0;
+  mrb_get_args(mrb, "i", &us);
+  servo->writeMicroseconds(us);
+  return mrb_nil_value();
+}
+
+mrb_value mrb_servo_read(mrb_state *mrb, mrb_value self){
+  Servo *servo = (Servo *)mrb_get_datatype(mrb, self, &mrb_servo_type);
+  return mrb_fixnum_value(servo->read());
+}
+
+mrb_value mrb_servo_attached(mrb_state *mrb, mrb_value self){
+  Servo *servo = (Servo *)mrb_get_datatype(mrb, self, &mrb_servo_type);
+  return mrb_bool_value(servo->attached());
 }
 
 mrb_value mrb_servo_detach(mrb_state *mrb, mrb_value self){
@@ -271,8 +293,11 @@ mruby_arduino_init_gr(mrb_state* mrb) {
   RClass *servoClass = mrb_define_class(mrb, "Servo", mrb->object_class);
   MRB_SET_INSTANCE_TT(servoClass, MRB_TT_DATA);
   mrb_define_method(mrb, servoClass, "initialize", mrb_servo_initialize, MRB_ARGS_NONE());
-  mrb_define_method(mrb, servoClass, "attach", mrb_servo_attach, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, servoClass, "attach", mrb_servo_attach, MRB_ARGS_REQ(1) | MRB_ARGS_OPT(2));
   mrb_define_method(mrb, servoClass, "write", mrb_servo_write, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, servoClass, "writeMicroseconds", mrb_servo_writeMicroseconds, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, servoClass, "read", mrb_servo_read, MRB_ARGS_NONE());
+  mrb_define_method(mrb, servoClass, "attached", mrb_servo_attached, MRB_ARGS_NONE());
   mrb_define_method(mrb, servoClass, "detach", mrb_servo_detach, MRB_ARGS_NONE());
 
   RClass *arduinoModule = mrb_define_module(mrb, "Arduino");
