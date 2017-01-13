@@ -22,15 +22,46 @@ mrb_value mrb_serial_begin(mrb_state *mrb, mrb_value self){
   return mrb_nil_value();
 }
 
+mrb_value mrb_serial_end(mrb_state *mrb, mrb_value self){
+  Serial.end();
+  return mrb_nil_value();
+}
 
-mrb_value mrb_serial_println(mrb_state *mrb, mrb_value self){
+mrb_value mrb_serial_read(mrb_state *mrb, mrb_value self){
+  return mrb_fixnum_value(Serial.read());
+}
+
+mrb_value mrb_serial_peek(mrb_state *mrb, mrb_value self){
+  return mrb_fixnum_value(Serial.peek());
+}
+
+mrb_value mrb_serial_flush(mrb_state *mrb, mrb_value self){
+  Serial.flush();
+  return mrb_nil_value();
+}
+
+mrb_value mrb_serial_write(mrb_state *mrb, mrb_value self){
   mrb_value s;
   mrb_get_args(mrb,"S", &s);
-  for (int i = 0; i < RSTRING_LEN(s); i++){
-    Serial.print( RSTRING_PTR(s)[i] );
+  return mrb_fixnum_value(Serial.write(RSTRING_PTR(s), RSTRING_LEN(s)));
+}
+
+mrb_value mrb_serial_print(mrb_state *mrb, mrb_value self){
+  int n = 0;
+  mrb_value obj;
+  mrb_get_args(mrb, "o", &obj);
+  if (mrb_string_p(obj)) {
+    n = Serial.write(RSTRING_PTR(obj), RSTRING_LEN(obj));
   }
-  Serial.println("");
-  return mrb_nil_value();
+
+  return mrb_fixnum_value(n);
+}
+
+mrb_value mrb_serial_println(mrb_state *mrb, mrb_value self){
+  mrb_value n = mrb_serial_print(mrb, self);
+  Serial.println();
+
+  return n;
 }
 
 void mrb_servo_free(mrb_state *mrb, void *ptr){
@@ -229,6 +260,12 @@ mruby_arduino_init_gr(mrb_state* mrb) {
   RClass *serialClass = mrb_define_class(mrb, "Serial", mrb->object_class);
   mrb_define_class_method(mrb, serialClass, "available", mrb_serial_available, MRB_ARGS_NONE());
   mrb_define_class_method(mrb, serialClass, "begin",mrb_serial_begin, MRB_ARGS_REQ(1));
+  mrb_define_class_method(mrb, serialClass, "end", mrb_serial_end, MRB_ARGS_NONE());
+  mrb_define_class_method(mrb, serialClass, "read", mrb_serial_read, MRB_ARGS_NONE());
+  mrb_define_class_method(mrb, serialClass, "peek", mrb_serial_peek, MRB_ARGS_NONE());
+  mrb_define_class_method(mrb, serialClass, "flush", mrb_serial_flush, MRB_ARGS_NONE());
+  mrb_define_class_method(mrb, serialClass, "write", mrb_serial_write, MRB_ARGS_REQ(1));
+  mrb_define_class_method(mrb, serialClass, "print", mrb_serial_write, MRB_ARGS_REQ(1));
   mrb_define_class_method(mrb, serialClass, "println", mrb_serial_println, MRB_ARGS_REQ(1));
 
   RClass *servoClass = mrb_define_class(mrb, "Servo", mrb->object_class);
